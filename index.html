@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="google-site-verification" content="ED9qe2nvCSbDiOg4FS3FFqsEtzUah7sid3kkHtF_6aI" />
     <title>Falke Financial & Solar Services</title>
     <!-- Font Awesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -551,11 +552,32 @@ section {
   transform: translateY(-10px);
   box-shadow: 0 15px 30px rgba(0,0,0,0.15);
 }
+
+.call-btn {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  background: linear-gradient(135deg, #00c853, #00e676);
+  color: white;
+  padding: 14px 20px;
+  border-radius: 50px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 14px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+  transition: all 0.3s ease;
+  z-index: 999;
+  animation: pulse 2s infinite;
+}
+
+.call-btn:hover {
+  transform: translateY(-5px) scale(1.05);
+}
     </style>
     <!-- STYLE.CSS END -->
 </head>
 <body>
-
+<a href="tel:+919890692815" class="call-btn">Call Now</a>
     <!-- Navbar -->
     <header>
         <div class="container">
@@ -590,8 +612,10 @@ We help you choose the best insurance plans and install solar systems to reduce 
 </p>
             <div class="hero-buttons">
                 <a href="#contact" class="btn btn-primary">Get Free Consultation</a>
-                <a href="https://wa.me/9890692815" target="_blank" class="btn btn-whatsapp"><i class="fab fa-whatsapp"></i> WhatsApp Now</a>
-                <a href="#contact" class="btn btn-primary">Get Free Consultation</a>
+<a href="https://wa.me/9890692815" target="_blank" class="btn btn-whatsapp">
+  <i class="fab fa-whatsapp"></i> WhatsApp Now
+</a>
+<a href="#contact" class="btn btn-primary">Get Free Consultation</a>
             </div>
         </div>
     </section>
@@ -946,19 +970,7 @@ We help you choose the best insurance plans and install solar systems to reduce 
   // ================= FORM SUBMIT =================
   const contactForm = document.getElementById('contact-form');
 
-  contactForm.addEventListener('submit', function (event) {
-    event.preventDefault();
-
-    emailjs.sendForm(
-      "service_g1qjess",
-      "template_z96e55p",
-      this
-    ).then(() => {
-      contactForm.reset();
-document.querySelector(".submit-btn").innerText = "Sent ✓";
-
-      // Redirect to WhatsApp
-     contactForm.addEventListener('submit', function (event) {
+contactForm.addEventListener('submit', function (event) {
   event.preventDefault();
 
   emailjs.sendForm(
@@ -966,22 +978,16 @@ document.querySelector(".submit-btn").innerText = "Sent ✓";
     "template_z96e55p",
     this
   ).then(() => {
-    contactForm.reset();
 
     contactForm.reset();
 
-document.querySelector(".submit-btn").innerText = "Submitted ✓";
+    document.querySelector(".submit-btn").innerText = "Submitted ✓";
 
-// Show success message
-document.getElementById("success-message").style.display = "block";
+    document.getElementById("success-message").style.display = "block";
+
   }).catch((error) => {
     console.error(error);
     alert("Failed to send message");
   });
 });
-    }).catch((error) => {
-      console.error(error);
-      alert("Failed to send message");
-    });
-  });
 </script>
