@@ -41,6 +41,22 @@
             --transition: all 0.3s ease;
         }
 
+        body.dark-mode {
+  --primary-blue: #4dabf7;
+  --secondary-blue: #1c3d5a;
+  --primary-green: #2ecc71;
+  --secondary-green: #27ae60;
+
+  --text-dark: #f1f1f1;
+  --text-light: #cccccc;
+
+  --bg-light: #121212;
+  --white: #1e1e1e;
+
+  background-color: #121212;
+  color: #f1f1f1;
+}
+
         * {
             margin: 0;
             padding: 0;
@@ -435,7 +451,7 @@ section {
 
         /* --- Footer --- */
         footer {
-            background-color: #1a1a1a;
+  background-color: var(--secondary-blue);
             color: #ccc;
             padding: 50px 0 20px;
         }
@@ -655,6 +671,7 @@ section {
                     <li><a href="#solar">Solar</a></li>
                     <li><a href="#contact">Contact</a></li>
                 </ul>
+                <button id="theme-toggle" class="btn btn-outline">🌙</button>
             </nav>
         </div>
     </header>
@@ -1073,5 +1090,26 @@ contactForm.addEventListener('submit', function (event) {
     console.error(error);
     alert("Failed to send message");
   });
+});
+
+// DARK MODE TOGGLE
+const toggleBtn = document.getElementById("theme-toggle");
+
+// Load saved mode
+if (localStorage.getItem("theme") === "dark") {
+  document.body.classList.add("dark-mode");
+  toggleBtn.innerText = "☀️";
+}
+
+toggleBtn.addEventListener("click", () => {
+  document.body.classList.toggle("dark-mode");
+
+  if (document.body.classList.contains("dark-mode")) {
+    localStorage.setItem("theme", "dark");
+    toggleBtn.innerText = "☀️";
+  } else {
+    localStorage.setItem("theme", "light");
+    toggleBtn.innerText = "🌙";
+  }
 });
 </script>
