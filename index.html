@@ -773,6 +773,22 @@ WhatsApp Now
     </p>
   </div>
 </section>
+<div style="padding:40px; text-align:center;">
+  <h2>Create Account</h2>
+
+  <input id="signup-email" type="email" placeholder="Enter Email"><br><br>
+  <input id="signup-password" type="password" placeholder="Enter Password"><br><br>
+
+  <button onclick="signupUser()" class="btn btn-primary">Sign Up</button>
+</div>
+<div style="padding:40px; text-align:center;">
+  <h2>Login</h2>
+
+  <input id="login-email" type="email" placeholder="Enter Email"><br><br>
+  <input id="login-password" type="password" placeholder="Enter Password"><br><br>
+
+  <button onclick="loginUser()" class="btn btn-primary">Login</button>
+</div>
 
     <!-- Services Overview Section -->
     <section id="services-overview" class="section-padding services-overview">
@@ -1060,6 +1076,90 @@ Get Free Insurance Quote & Solar Price Estimate
     <a href="https://wa.me/919890692815?text=Hi%20I%20am%20interested%20in%20insurance%20or%20solar%20services.%20Please%20guide%20me." class="whatsapp-float" target="_blank">
   <i class="fab fa-whatsapp"></i>
 </a>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } 
+from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+
+import { getFirestore, collection, addDoc } 
+from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+
+// ✅ CONFIG
+const firebaseConfig = {
+  apiKey: "AIzaSyC1u-NqXsGWnMmtbKveCvMfO0FiiymrKQ4",
+  authDomain: "falke-system.firebaseapp.com",
+  projectId: "falke-system",
+  storageBucket: "falke-system.firebasestorage.app",
+  messagingSenderId: "1027757165450",
+  appId: "1:1027757165450:web:2dc0e7f2e32a211ebad673"
+};
+
+// ✅ INIT
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// ================= SIGNUP =================
+window.signupUser = function () {
+  const email = document.getElementById("signup-email").value;
+  const password = document.getElementById("signup-password").value;
+
+  createUserWithEmailAndPassword(auth, email, password)
+    .then(() => alert("Account Created ✅"))
+    .catch((error) => alert(error.message));
+};
+
+// ================= LOGIN =================
+window.loginUser = function () {
+  const email = document.getElementById("login-email").value;
+  const password = document.getElementById("login-password").value;
+
+  signInWithEmailAndPassword(auth, email, password)
+    .then(() => alert("Login Successful ✅"))
+    .catch((error) => alert(error.message));
+};
+
+// ================= FORM SUBMIT =================
+document.addEventListener("DOMContentLoaded", () => {
+
+  const contactForm = document.getElementById('contact-form');
+
+  contactForm.addEventListener('submit', async function (event) {
+    event.preventDefault();
+
+    const name = document.getElementById("name").value;
+    const phone = document.getElementById("phone").value;
+    const email = document.getElementById("email").value;
+    const service = document.getElementById("service").value;
+    const message = document.getElementById("message").value;
+
+    try {
+      await addDoc(collection(db, "leads"), {
+        name,
+        phone,
+        email,
+        service,
+        message,
+        createdAt: new Date()
+      });
+
+      await emailjs.sendForm(
+        "service_g1qjess",
+        "template_z96e55p",
+        contactForm
+      );
+
+      contactForm.reset();
+      alert("Submitted Successfully ✅");
+
+    } catch (error) {
+      console.error(error);
+      alert("Error ❌");
+    }
+  });
+
+});
+</script>
 
     <!-- EmailJS Library -->
 <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
@@ -1113,30 +1213,7 @@ Get Free Insurance Quote & Solar Price Estimate
     emailjs.init("m69GJeeHahYG2lSuj");
   })();
 
-  // ================= FORM SUBMIT =================
-  const contactForm = document.getElementById('contact-form');
-
-contactForm.addEventListener('submit', function (event) {
-  event.preventDefault();
-
-  emailjs.sendForm(
-    "service_g1qjess",
-    "template_z96e55p",
-    this
-  ).then(() => {
-
-    contactForm.reset();
-
-    document.querySelector(".submit-btn").innerText = "Submitted ✓";
-
-    document.getElementById("success-message").style.display = "block";
-
-  }).catch((error) => {
-    console.error(error);
-    alert("Failed to send message");
-  });
-});
-
+emailjs.init("m69GJeeHahYG2lSuj");
 // DARK MODE TOGGLE
 const toggleBtn = document.getElementById("theme-toggle");
 
@@ -1157,4 +1234,5 @@ toggleBtn.addEventListener("click", () => {
     toggleBtn.innerText = "🌙";
   }
 });
+
 </script>
