@@ -1134,15 +1134,15 @@ document.addEventListener("DOMContentLoaded", () => {
     const message = document.getElementById("message").value;
 
     try {
-      await addDoc(collection(db, "leads"), {
-        name,
-        phone,
-        email,
-        service,
-        message,
-        createdAt: new Date()
-      });
-
+     await addDoc(collection(db, "leads"), {
+  name,
+  phone,
+  email,
+  service,
+  message,
+  status: "new", // 🔥 IMPORTANT
+  createdAt: new Date()
+});
       await emailjs.sendForm(
         "service_g1qjess",
         "template_z96e55p",

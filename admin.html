@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin Dashboard</title>
+</head>
+<body>
+
+<h1>Leads Dashboard</h1>
+
+<div id="login-section">
+  <h2>Admin Login</h2>
+  <input id="admin-email" placeholder="Email"><br><br>
+  <input id="admin-password" type="password" placeholder="Password"><br><br>
+  <button onclick="adminLogin()">Login</button>
+</div>
+
+<div id="dashboard" style="display:none;">
+  <h2>All Leads</h2>
+  <div id="leads-container"></div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } 
+from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+import { getFirestore, collection, getDocs, doc, updateDoc } 
+from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyC1u-NqXsGWnMmtbKveCvMfO0FiiymrKQ4",
+  authDomain: "falke-system.firebaseapp.com",
+  projectId: "falke-system",
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// 🔐 ADMIN EMAIL (VERY IMPORTANT)
+const ADMIN_EMAIL = "historicalfacts777@gmail.com";
+
+// LOGIN
+window.adminLogin = function () {
+  const email = document.getElementById("admin-email").value;
+  const password = document.getElementById("admin-password").value;
+
+  signInWithEmailAndPassword(auth, email, password)
+    .then(() => {
+      alert("Login Success");
+    })
+    .catch(err => alert(err.message));
+};
+
+// CHECK AUTH STATE
+onAuthStateChanged(auth, (user) => {
+  if (user && user.email === ADMIN_EMAIL) {
+    document.getElementById("login-section").style.display = "none";
+    document.getElementById("dashboard").style.display = "block";
+    loadLeads();
+  } else {
+    document.getElementById("login-section").style.display = "block";
+    document.getElementById("dashboard").style.display = "none";
+  }
+});
+
+// LOAD LEADS
+async function loadLeads() {
+  const querySnapshot = await getDocs(collection(db, "leads"));
+  const container = document.getElementById("leads-container");
+
+  container.innerHTML = "";
+
+  querySnapshot.forEach((doc) => {
+    const data = doc.data();
+
+   container.innerHTML += `
+  <div style="border:1px solid #ccc; padding:15px; margin:10px;">
+    
+    <p><strong>Name:</strong> ${data.name}</p>
+    <p><strong>Phone:</strong> ${data.phone}</p>
+    <p><strong>Service:</strong> ${data.service}</p>
+    <p><strong>Status:</strong> ${data.status || "new"}</p>
+
+    <a href="tel:${data.phone}">
+      <button>📞 Call</button>
+    </a>
+
+    <a href="https://wa.me/91${data.phone}" target="_blank">
+      <button>💬 WhatsApp</button>
+    </a>
+
+    <button onclick="markContacted('${doc.id}')">
+      ✅ Mark Contacted
+    </button>
+
+  </div>
+`;
+  });
+}
+window.markContacted = async function(id) {
+  await updateDoc(doc(db, "leads", id), {
+    status: "contacted"
+  });
+
+  alert("Updated ✅");
+  location.reload();
+};
+</script>
+
+</body>
+</html>
