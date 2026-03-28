@@ -16,6 +16,11 @@
 
 <div id="dashboard" style="display:none;">
   <h2>All Leads</h2>
+  <div style="margin-bottom:20px;">
+  <button onclick="filterLeads('all')">All</button>
+  <button onclick="filterLeads('new')">New</button>
+  <button onclick="filterLeads('contacted')">Contacted</button>
+</div>
   <div id="leads-container"></div>
 </div>
 
@@ -35,6 +40,8 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+let allLeads = [];
+let currentFilter = "all";
 
 // 🔐 ADMIN EMAIL (VERY IMPORTANT)
 const ADMIN_EMAIL = "historicalfacts777@gmail.com";
@@ -65,45 +72,79 @@ onAuthStateChanged(auth, (user) => {
 
 // LOAD LEADS
 async function loadLeads() {
-  const querySnapshot = await getDocs(collection(db, "leads"));
-  const container = document.getElementById("leads-container");
 
-  container.innerHTML = "";
+  const querySnapshot = await getDocs(collection(db, "leads"));
+  allLeads = [];
 
   querySnapshot.forEach((doc) => {
-    const data = doc.data();
+    allLeads.push({
+      id: doc.id,
+      ...doc.data()
+    });
+  });
 
-   container.innerHTML += `
-  <div style="border:1px solid #ccc; padding:15px; margin:10px;">
-    
-    <p><strong>Name:</strong> ${data.name}</p>
-    <p><strong>Phone:</strong> ${data.phone}</p>
-    <p><strong>Service:</strong> ${data.service}</p>
-    <p><strong>Status:</strong> ${data.status || "new"}</p>
+  // sort latest first
+  allLeads.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
-    <a href="tel:${data.phone}">
-      <button>📞 Call</button>
-    </a>
+  renderLeads();
+}
+function renderLeads() {
 
-    <a href="https://wa.me/91${data.phone}" target="_blank">
-      <button>💬 WhatsApp</button>
-    </a>
+  const container = document.getElementById("leads-container");
+  container.innerHTML = "";
 
-    <button onclick="markContacted('${doc.id}')">
-      ✅ Mark Contacted
-    </button>
+  let filtered = allLeads;
 
-  </div>
-`;
+  if (currentFilter !== "all") {
+    filtered = allLeads.filter(lead => lead.status === currentFilter);
+  }
+
+  filtered.forEach((data) => {
+
+    container.innerHTML += `
+      <div style="border:1px solid #ccc; padding:15px; margin:10px; border-radius:10px;">
+        
+        <p><strong>Name:</strong> ${data.name}</p>
+        <p><strong>Phone:</strong> ${data.phone}</p>
+        <p><strong>Service:</strong> ${data.service}</p>
+        <p><strong>Status:</strong> ${data.status || "new"}</p>
+
+        <a href="tel:${data.phone}">
+          <button>📞 Call</button>
+        </a>
+
+        <a href="https://wa.me/91${data.phone}" target="_blank">
+          <button>💬 WhatsApp</button>
+        </a>
+
+        <button onclick="markContacted('${data.id}')">
+          ✅ Mark Contacted
+        </button>
+
+      </div>
+    `;
   });
 }
+window.filterLeads = function(status) {
+  currentFilter = status;
+  renderLeads();
+};
 window.markContacted = async function(id) {
   await updateDoc(doc(db, "leads", id), {
     status: "contacted"
   });
 
   alert("Updated ✅");
-  location.reload();
+  await updateDoc(doc(db, "leads", id), {
+  status: "contacted"
+});
+
+// update UI without reload
+allLeads = allLeads.map(lead => 
+  lead.id === id ? { ...lead, status: "contacted" } : lead
+);
+
+renderLeads();
 };
 </script>
 
