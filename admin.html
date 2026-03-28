@@ -18,11 +18,32 @@
   <h2>All Leads</h2>
   <div style="margin-bottom:20px;">
   <button onclick="filterLeads('all')">All</button>
-  <button onclick="filterLeads('new')">New</button>
-  <button onclick="filterLeads('contacted')">Contacted</button>
+<button onclick="filterLeads('new')">New</button>
+<button onclick="filterLeads('contacted')">Contacted</button>
+<button onclick="filterLeads('interested')">Interested</button>
+<button onclick="filterLeads('closed')">Closed</button>
+</div>
+<div id="dashboard" style="display:flex; gap:15px; flex-wrap:wrap; margin-bottom:20px;">
+  
+  <div class="card">Total: <span id="total-count">0</span></div>
+  <div class="card">New: <span id="new-count">0</span></div>
+  <div class="card">Contacted: <span id="contacted-count">0</span></div>
+  <div class="card">Interested: <span id="interested-count">0</span></div>
+  <div class="card">Closed: <span id="closed-count">0</span></div>
+
 </div>
   <div id="leads-container"></div>
 </div>
+
+<style>
+  .card {
+    border: 1px solid #ccc;
+    padding: 15px;
+    border-radius: 10px;
+    width: 150px;
+    text-align: center;
+  }
+</style>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
@@ -87,6 +108,7 @@ async function loadLeads() {
   allLeads.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
   renderLeads();
+  updateDashboard();
 }
 function renderLeads() {
 
@@ -116,15 +138,19 @@ function renderLeads() {
         <a href="https://wa.me/91${data.phone}" target="_blank">
           <button>💬 WhatsApp</button>
         </a>
-
-        <button onclick="markContacted('${data.id}')">
-          ✅ Mark Contacted
-        </button>
+<select onchange="updateStatus('${data.id}', this.value)">
+  <option value="new" ${data.status === "new" ? "selected" : ""}>New</option>
+  <option value="contacted" ${data.status === "contacted" ? "selected" : ""}>Contacted</option>
+  <option value="interested" ${data.status === "interested" ? "selected" : ""}>Interested</option>
+  <option value="closed" ${data.status === "closed" ? "selected" : ""}>Closed</option>
+</select>
+        
 
       </div>
     `;
   });
 }
+
 window.filterLeads = function(status) {
   currentFilter = status;
   renderLeads();
@@ -145,7 +171,37 @@ allLeads = allLeads.map(lead =>
 );
 
 renderLeads();
+updateDashboard();
 };
+window.updateStatus = async function(id, newStatus) {
+
+  await updateDoc(doc(db, "leads", id), {
+    status: newStatus
+  });
+
+  // update UI instantly
+  allLeads = allLeads.map(lead =>
+    lead.id === id ? { ...lead, status: newStatus } : lead
+  );
+
+  renderLeads();
+};
+function updateDashboard() {
+
+  document.getElementById("total-count").innerText = allLeads.length;
+
+  document.getElementById("new-count").innerText =
+    allLeads.filter(l => l.status === "new").length;
+
+  document.getElementById("contacted-count").innerText =
+    allLeads.filter(l => l.status === "contacted").length;
+
+  document.getElementById("interested-count").innerText =
+    allLeads.filter(l => l.status === "interested").length;
+
+  document.getElementById("closed-count").innerText =
+    allLeads.filter(l => l.status === "closed").length;
+}
 </script>
 
 </body>
