@@ -15,6 +15,7 @@
 <button onclick="sendRequest('payment')">Request Payment Link</button>
 
 <h2>Your Requests</h2>
+<button onclick="loadRequests()">🔄 Refresh</button>
 <div id="requests-container"></div>
 
 <script type="module">
@@ -78,15 +79,38 @@ async function loadRequests() {
 
   querySnapshot.forEach((doc) => {
     const data = doc.data();
+    console.log(doc.data());
 
     container.innerHTML += `
-      <div style="border:1px solid #ccc; padding:10px; margin:10px;">
-        <p>Type: ${data.type}</p>
-        <p>Status: ${data.status}</p>
-      </div>
-    `;
-  });
+  <div style="border:1px solid #ccc; padding:10px; margin:10px;">
+    
+    <p>Type: ${data.type}</p>
+
+    <p>
+    Status: 
+    <span style="
+      color: ${
+        data.status === 'approved' ? 'green' :
+        data.status === 'rejected' ? 'red' :
+        data.status === 'payment_sent' ? 'blue' : 'orange'
+      };
+      font-weight:bold;
+    ">
+      ${data.status}
+    </span>
+    </p>
+
+    ${data.paymentLink ? `
+      <a href="${data.paymentLink}" target="_blank">
+        <button>💳 Pay Now</button>
+      </a>
+    ` : ""}
+
+  </div>
+`;  
+});
 }
+
 </script>
 
 </body>

@@ -35,6 +35,8 @@
 </div>
   <div id="leads-container"></div>
 </div>
+<h2>User Requests</h2>
+<div id="requests-container"></div>
 
 <style>
   .card {
@@ -87,6 +89,7 @@ onAuthStateChanged(auth, (user) => {
 
   if (!isLoaded) {
     loadLeads();
+    loadRequests();
     isLoaded = true;
   }
 
@@ -128,6 +131,71 @@ async function loadLeads() {
   renderLeads();
   updateDashboard();
 }
+async function loadRequests() {
+
+  const querySnapshot = await getDocs(collection(db, "requests"));
+
+  const container = document.getElementById("requests-container");
+  container.innerHTML = "";
+
+  querySnapshot.forEach((docSnap) => {
+    const data = docSnap.data();
+
+    container.innerHTML += `
+      <div style="border:1px solid #000; padding:10px; margin:10px;">
+        <p><strong>Email:</strong> ${data.email}</p>
+        <p><strong>Type:</strong> ${data.type}</p>
+        <p><strong>Status:</strong> ${data.status}</p>
+
+<input 
+  placeholder="Paste Payment Link" 
+  id="link-${docSnap.id}" 
+  style="width:200px;"
+>
+
+<button onclick="sendPayment('${docSnap.id}')">
+  💰 Send Payment
+</button>
+        <button onclick="updateRequestStatus('${docSnap.id}', 'approved')">
+          Approve
+        </button>
+
+        <button onclick="updateRequestStatus('${docSnap.id}', 'rejected')">
+          Reject
+        </button>
+      </div>
+    `;
+  });
+}
+window.updateRequestStatus = async function(id, newStatus) {
+
+  await updateDoc(doc(db, "requests", id), {
+    status: newStatus
+  });
+
+  alert("Updated ✅");
+
+  loadRequests();
+};
+window.sendPayment = async function(id) {
+
+  const input = document.getElementById(`link-${id}`);
+  const link = input.value;
+
+  if (!link) {
+    alert("Enter payment link ❌");
+    return;
+  }
+
+  await updateDoc(doc(db, "requests", id), {
+    paymentLink: link,
+    status: "payment_sent"
+  });
+
+  alert("Payment link sent ✅");
+
+  loadRequests();
+};
 function renderLeads() {
 
   const container = document.getElementById("leads-container");
