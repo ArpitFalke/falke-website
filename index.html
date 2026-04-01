@@ -690,6 +690,7 @@ section {
                     <li><a href="#insurance">Insurance</a></li>
                     <li><a href="#solar">Solar</a></li>
                     <li><a href="#contact">Contact</a></li>
+                    <li><a href="#" onclick="openAuthModal()">Login</a></li>
                 </ul>
                 <button id="theme-toggle" class="btn btn-outline">🌙</button>
             </nav>
@@ -773,22 +774,6 @@ WhatsApp Now
     </p>
   </div>
 </section>
-<div style="padding:40px; text-align:center;">
-  <h2>Create Account</h2>
-
-  <input id="signup-email" type="email" placeholder="Enter Email"><br><br>
-  <input id="signup-password" type="password" placeholder="Enter Password"><br><br>
-
-  <button onclick="signupUser()" class="btn btn-primary">Sign Up</button>
-</div>
-<div style="padding:40px; text-align:center;">
-  <h2>Login</h2>
-
-  <input id="login-email" type="email" placeholder="Enter Email"><br><br>
-  <input id="login-password" type="password" placeholder="Enter Password"><br><br>
-
-  <button onclick="loginUser()" class="btn btn-primary">Login</button>
-</div>
 
     <!-- Services Overview Section -->
     <section id="services-overview" class="section-padding services-overview">
@@ -1076,6 +1061,27 @@ Get Free Insurance Quote & Solar Price Estimate
     <a href="https://wa.me/919890692815?text=Hi%20I%20am%20interested%20in%20insurance%20or%20solar%20services.%20Please%20guide%20me." class="whatsapp-float" target="_blank">
   <i class="fab fa-whatsapp"></i>
 </a>
+<!-- AUTH MODAL -->
+<div id="authModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:2000; justify-content:center; align-items:center;">
+
+  <div style="background:white; padding:30px; border-radius:10px; width:300px; text-align:center;">
+
+    <h2 id="authTitle">Login</h2>
+
+    <input id="auth-email" type="email" placeholder="Email" style="width:100%; padding:10px; margin:10px 0;">
+    <input id="auth-password" type="password" placeholder="Password" style="width:100%; padding:10px; margin:10px 0;">
+
+    <button onclick="handleAuth()" class="btn btn-primary" style="width:100%;">Submit</button>
+
+    <p style="margin-top:10px; cursor:pointer; color:blue;" onclick="toggleAuthMode()">
+      Switch to Signup
+    </p>
+
+    <button onclick="closeAuthModal()" style="margin-top:10px;">Close</button>
+
+  </div>
+</div>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } 
@@ -1083,7 +1089,8 @@ from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
 
 import { getFirestore, collection, addDoc } 
 from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
-
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+import { doc, setDoc } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 // ✅ CONFIG
 const firebaseConfig = {
   apiKey: "AIzaSyC1u-NqXsGWnMmtbKveCvMfO0FiiymrKQ4",
@@ -1099,26 +1106,69 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// ================= SIGNUP =================
-window.signupUser = function () {
-  const email = document.getElementById("signup-email").value;
-  const password = document.getElementById("signup-password").value;
+onAuthStateChanged(auth, (user) => {
+  const loginBtn = document.querySelector('.nav-links li:last-child a');
 
-  createUserWithEmailAndPassword(auth, email, password)
-    .then(() => alert("Account Created ✅"))
-    .catch((error) => alert(error.message));
+  if (user) {
+    console.log("User logged in:", user.email);
+
+    loginBtn.innerText = "Dashboard";
+    loginBtn.onclick = () => {
+      window.location.href = "/dashboard.html";
+    };
+
+  } else {
+    console.log("No user logged in");
+
+    loginBtn.innerText = "Login";
+    loginBtn.onclick = () => openAuthModal();
+  }
+});
+
+// ================= AUTH MODAL =================
+let isLogin = true;
+ 
+window.openAuthModal = function () {
+  document.getElementById("authModal").style.display = "flex";
 };
 
-// ================= LOGIN =================
-window.loginUser = function () {
-  const email = document.getElementById("login-email").value;
-  const password = document.getElementById("login-password").value;
-
-  signInWithEmailAndPassword(auth, email, password)
-    .then(() => alert("Login Successful ✅"))
-    .catch((error) => alert(error.message));
+window.closeAuthModal = function () {
+  document.getElementById("authModal").style.display = "none";
 };
 
+window.toggleAuthMode = function () {
+  isLogin = !isLogin;
+  document.getElementById("authTitle").innerText = isLogin ? "Login" : "Signup";
+};
+
+window.handleAuth = function () {
+  const email = document.getElementById("auth-email").value;
+  const password = document.getElementById("auth-password").value;
+
+  if (isLogin) {
+    signInWithEmailAndPassword(auth, email, password)
+    .then(() => {
+  closeAuthModal();
+  window.location.href = "/dashboard.html";
+})
+      .catch(err => alert(err.message));
+  } else {
+   
+
+createUserWithEmailAndPassword(auth, email, password)
+  .then(async (userCredential) => {
+    const user = userCredential.user;
+
+    await setDoc(doc(db, "users", user.uid), {
+      email: user.email,
+      createdAt: new Date()
+    });
+
+    alert("Account Created ✅");
+    closeAuthModal();
+  })
+  }
+};
 // ================= FORM SUBMIT =================
 document.addEventListener("DOMContentLoaded", () => {
 
@@ -1143,11 +1193,15 @@ document.addEventListener("DOMContentLoaded", () => {
   status: "new", // 🔥 IMPORTANT
   createdAt: new Date()
 });
-      await emailjs.sendForm(
-        "service_g1qjess",
-        "template_z96e55p",
-        contactForm
-      );
+      if (typeof emailjs !== "undefined") {
+  await emailjs.sendForm(
+    "service_g1qjess",
+    "template_z96e55p",
+    contactForm
+  );
+} else {
+  console.error("EmailJS not loaded");
+}
 
       contactForm.reset();
 
@@ -1219,9 +1273,7 @@ document.getElementById("success-message").scrollIntoView({
   }
 
   // ================= EMAILJS INIT =================
-  (function () {
-    emailjs.init("m69GJeeHahYG2lSuj");
-  })();
+  
 
 emailjs.init("m69GJeeHahYG2lSuj");
 // DARK MODE TOGGLE

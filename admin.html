@@ -22,8 +22,9 @@
 <button onclick="filterLeads('contacted')">Contacted</button>
 <button onclick="filterLeads('interested')">Interested</button>
 <button onclick="filterLeads('closed')">Closed</button>
+<button onclick="logout()">Logout</button>
 </div>
-<div id="dashboard" style="display:flex; gap:15px; flex-wrap:wrap; margin-bottom:20px;">
+<div id="status-container" style="display:flex; gap:15px; flex-wrap:wrap; margin-bottom:20px;">
   
   <div class="card">Total: <span id="total-count">0</span></div>
   <div class="card">New: <span id="new-count">0</span></div>
@@ -51,21 +52,50 @@ import { getAuth, signInWithEmailAndPassword, onAuthStateChanged }
 from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
 import { getFirestore, collection, getDocs, doc, updateDoc } 
 from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+import { signOut } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+
+
+
 
 const firebaseConfig = {
   apiKey: "AIzaSyC1u-NqXsGWnMmtbKveCvMfO0FiiymrKQ4",
   authDomain: "falke-system.firebaseapp.com",
   projectId: "falke-system",
 };
-
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+window.logout = function () {
+  signOut(auth).then(() => {
+    alert("Logged out");
+    location.reload(); // ADD THIS
+  });
+};
 const db = getFirestore(app);
 let allLeads = [];
 let currentFilter = "all";
-
-// 🔐 ADMIN EMAIL (VERY IMPORTANT)
+let isLoaded = false;
+// 🔐 ADMIN EMAIL
 const ADMIN_EMAIL = "historicalfacts777@gmail.com";
+
+// ✅ AUTH STATE LISTENER (PUT HERE)
+onAuthStateChanged(auth, (user) => {
+
+  if (user && user.email === ADMIN_EMAIL) {
+
+  document.getElementById("login-section").style.display = "none";
+  document.getElementById("dashboard").style.display = "block";
+
+  if (!isLoaded) {
+    loadLeads();
+    isLoaded = true;
+  }
+
+} else {
+    document.getElementById("login-section").style.display = "block";
+    document.getElementById("dashboard").style.display = "none";
+  }
+});
+
 
 // LOGIN
 window.adminLogin = function () {
@@ -78,18 +108,6 @@ window.adminLogin = function () {
     })
     .catch(err => alert(err.message));
 };
-
-// CHECK AUTH STATE
-onAuthStateChanged(auth, (user) => {
-  if (user && user.email === ADMIN_EMAIL) {
-    document.getElementById("login-section").style.display = "none";
-    document.getElementById("dashboard").style.display = "block";
-    loadLeads();
-  } else {
-    document.getElementById("login-section").style.display = "block";
-    document.getElementById("dashboard").style.display = "none";
-  }
-});
 
 // LOAD LEADS
 async function loadLeads() {
@@ -121,11 +139,14 @@ function renderLeads() {
     filtered = allLeads.filter(lead => lead.status === currentFilter);
   }
 
-  filtered.forEach((data) => {
+  if (filtered.length === 0) {
+    container.innerHTML = "<p>No leads found</p>";
+    return;
+  }
 
+  filtered.forEach((data) => {
     container.innerHTML += `
       <div style="border:1px solid #ccc; padding:15px; margin:10px; border-radius:10px;">
-        
         <p><strong>Name:</strong> ${data.name}</p>
         <p><strong>Phone:</strong> ${data.phone}</p>
         <p><strong>Service:</strong> ${data.service}</p>
@@ -138,14 +159,13 @@ function renderLeads() {
         <a href="https://wa.me/91${data.phone}" target="_blank">
           <button>💬 WhatsApp</button>
         </a>
-<select onchange="updateStatus('${data.id}', this.value)">
-  <option value="new" ${data.status === "new" ? "selected" : ""}>New</option>
-  <option value="contacted" ${data.status === "contacted" ? "selected" : ""}>Contacted</option>
-  <option value="interested" ${data.status === "interested" ? "selected" : ""}>Interested</option>
-  <option value="closed" ${data.status === "closed" ? "selected" : ""}>Closed</option>
-</select>
-        
 
+        <select onchange="updateStatus('${data.id}', this.value)">
+          <option value="new" ${data.status === "new" ? "selected" : ""}>New</option>
+          <option value="contacted" ${data.status === "contacted" ? "selected" : ""}>Contacted</option>
+          <option value="interested" ${data.status === "interested" ? "selected" : ""}>Interested</option>
+          <option value="closed" ${data.status === "closed" ? "selected" : ""}>Closed</option>
+        </select>
       </div>
     `;
   });
@@ -156,23 +176,21 @@ window.filterLeads = function(status) {
   renderLeads();
 };
 window.markContacted = async function(id) {
+
   await updateDoc(doc(db, "leads", id), {
     status: "contacted"
   });
 
-  alert("Updated ✅");
-  await updateDoc(doc(db, "leads", id), {
-  status: "contacted"
-});
+  allLeads = allLeads.map(lead => 
+    lead.id === id ? { ...lead, status: "contacted" } : lead
+  );
+
+  renderLeads();
+  updateDashboard();
+};
 
 // update UI without reload
-allLeads = allLeads.map(lead => 
-  lead.id === id ? { ...lead, status: "contacted" } : lead
-);
 
-renderLeads();
-updateDashboard();
-};
 window.updateStatus = async function(id, newStatus) {
 
   await updateDoc(doc(db, "leads", id), {
@@ -185,6 +203,7 @@ window.updateStatus = async function(id, newStatus) {
   );
 
   renderLeads();
+  updateDashboard();
 };
 function updateDashboard() {
 
