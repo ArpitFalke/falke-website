@@ -23,7 +23,36 @@
 <button onclick="filterLeads('interested')">Interested</button>
 <button onclick="filterLeads('closed')">Closed</button>
 <button onclick="logout()">Logout</button>
+
+<h2>Add Customer</h2>
+
+<input id="cust-name" placeholder="Customer Name"><br><br>
+<input id="cust-phone" placeholder="Phone"><br><br>
+<input id="cust-policy" placeholder="Policy Type"><br><br>
+<input id="cust-premium" placeholder="Premium Amount"><br><br>
+<input id="cust-due" type="date"><br><br>
+
+<button onclick="addCustomer()">Add Customer</button>
+
+<hr>
+
 </div>
+
+<h2>All Customers</h2>
+<button onclick="loadCustomers()">🔄 Refresh</button>
+
+<div id="customers-container"></div>
+
+
+  <h2>User Requests</h2>
+<div id="requests-container">
+  
+</div>
+
+<h2>📅 Due Today / Overdue</h2>
+<div id="due-container"></div>
+
+
 <div id="status-container" style="display:flex; gap:15px; flex-wrap:wrap; margin-bottom:20px;">
   
   <div class="card">Total: <span id="total-count">0</span></div>
@@ -35,8 +64,8 @@
 </div>
   <div id="leads-container"></div>
 </div>
-<h2>User Requests</h2>
-<div id="requests-container"></div>
+
+
 
 <style>
   .card {
@@ -50,14 +79,170 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } 
-from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
-import { getFirestore, collection, getDocs, doc, updateDoc } 
-from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
-import { signOut } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+import { 
+  getFirestore, 
+  collection, 
+  getDocs, 
+  doc, 
+  updateDoc,
+  addDoc 
+} from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+import { 
+  getAuth, 
+  signInWithEmailAndPassword, 
+  onAuthStateChanged,
+  signOut 
+} from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
 
 
+window.addCustomer = async function () {
 
+  const name = document.getElementById("cust-name").value;
+  const phone = document.getElementById("cust-phone").value;
+  const policy = document.getElementById("cust-policy").value;
+  const premium = document.getElementById("cust-premium").value;
+  const dueDate = document.getElementById("cust-due").value;
+
+  if (!name || !phone) {
+    alert("Fill required fields ❌");
+    return;
+  }
+
+  await addDoc(collection(db, "customers"), {
+    name,
+    phone,
+    policy,
+    premium,
+    dueDate,
+    createdAt: new Date()
+  });
+
+  alert("Customer Added ✅");
+  loadCustomers();
+  loadDueCustomers();
+
+  // reset form
+  document.getElementById("cust-name").value = "";
+  document.getElementById("cust-phone").value = "";
+  document.getElementById("cust-policy").value = "";
+  document.getElementById("cust-premium").value = "";
+  document.getElementById("cust-due").value = "";
+};
+
+window.loadCustomers = async function () {
+
+  const container = document.getElementById("customers-container");
+  container.innerHTML = "Loading...";
+
+  const querySnapshot = await getDocs(collection(db, "customers"));
+
+  container.innerHTML = "";
+
+  if (querySnapshot.empty) {
+    container.innerHTML = "<p>No customers found</p>";
+    return;
+  }
+
+  querySnapshot.forEach((docSnap) => {
+    const data = docSnap.data();
+
+    container.innerHTML += `
+      <div style="border:1px solid #ccc; padding:15px; margin:10px; border-radius:10px;">
+        <p><strong>Name:</strong> ${data.name}</p>
+        <p><strong>Phone:</strong> ${data.phone}</p>
+        <p><strong>Policy:</strong> ${data.policy}</p>
+        <p><strong>Premium:</strong> ₹${data.premium}</p>
+        <p><strong>Due Date:</strong> ${data.dueDate}</p>
+<p style="color:${data.dueDate < new Date().toISOString().split("T")[0] ? 'red' : 'orange'}; font-weight:bold;">
+  ${data.dueDate < new Date().toISOString().split("T")[0] ? '⚠ OVERDUE' : '⏳ UPCOMING'}
+</p>
+        <a href="tel:${data.phone}">
+          <button>📞 Call</button>
+        </a>
+
+        <a href="https://wa.me/91${data.phone}" target="_blank">
+          <button>💬 WhatsApp</button>
+        </a>
+      </div>
+    `;
+  });
+};
+window.loadDueCustomers = async function () {
+
+  const container = document.getElementById("due-container");
+  container.innerHTML = "Loading...";
+
+  const querySnapshot = await getDocs(collection(db, "customers"));
+let customers = [];
+
+querySnapshot.forEach((docSnap) => {
+  customers.push({
+    id: docSnap.id,
+    ...docSnap.data()
+  });
+});
+
+// SORT by due date
+customers.sort((a, b) => (a.dueDate || "").localeCompare(b.dueDate || ""));
+  container.innerHTML = "";
+
+  const today = new Date().toISOString().split("T")[0];
+
+  let found = false;
+
+  customers.forEach((data) => {
+    const id = data.id;
+
+    if (data.dueDate && data.dueDate <= today) {
+
+      found = true;
+
+      const isOverdue = data.dueDate < today;
+
+      container.innerHTML += `
+        <div style="border:2px solid ${isOverdue ? 'red' : 'orange'}; padding:15px; margin:10px; border-radius:10px;">
+          <p><strong>Name:</strong> ${data.name}</p>
+          <p><strong>Phone:</strong> ${data.phone}</p>
+          <p><strong>Due Date:</strong> ${data.dueDate}</p>
+
+<p style="color:${isOverdue ? 'red' : 'orange'}; font-weight:bold;">
+  ${isOverdue ? '⚠ OVERDUE' : '⏳ DUE TODAY'}
+</p>
+
+          <a href="tel:${data.phone}">
+            <button>📞 Call Now</button>
+          </a>
+
+          <a href="https://wa.me/91${data.phone}" target="_blank">
+            <button>💬 WhatsApp</button>
+          </a>
+          <button onclick="markPaid('${id}')">✅ Mark Paid</button>
+        </div>
+      `;
+    }
+  });
+
+  if (!found) {
+    container.innerHTML = "<p>No due customers today ✅</p>";
+  }
+};
+
+window.markPaid = async function(id) {
+
+  const nextMonth = new Date();
+  nextMonth.setMonth(nextMonth.getMonth() + 1);
+
+  const nextDate = nextMonth.toISOString().split("T")[0];
+
+  await updateDoc(doc(db, "customers", id), {
+    dueDate: nextDate
+  });
+
+  alert("Marked as paid ✅");
+
+  loadDueCustomers();
+  loadCustomers();
+};
 
 const firebaseConfig = {
   apiKey: "AIzaSyC1u-NqXsGWnMmtbKveCvMfO0FiiymrKQ4",
@@ -89,6 +274,8 @@ onAuthStateChanged(auth, (user) => {
 
   if (!isLoaded) {
     loadLeads();
+    loadCustomers();
+    loadDueCustomers();
     loadRequests();
     isLoaded = true;
   }
