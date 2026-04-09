@@ -16,13 +16,18 @@
 
 <div id="dashboard" style="display:none;">
   <h2>All Leads</h2>
-  <div style="margin-bottom:20px;">
+  <div style="margin-bottom:15px 0;">
   <button onclick="filterLeads('all')">All</button>
 <button onclick="filterLeads('new')">New</button>
 <button onclick="filterLeads('contacted')">Contacted</button>
 <button onclick="filterLeads('interested')">Interested</button>
 <button onclick="filterLeads('closed')">Closed</button>
-<button class="danger" onclick="logout()">Logout</button>
+  </div>
+<div style="display:flex; justify-content:space-between; align-items:center;">
+  <h1>Admin Dashboard</h1>
+  <button class="danger" onclick="logout()">Logout</button>
+</div>
+<hr>
 
 <h2>Add Customer</h2>
 
@@ -38,18 +43,21 @@
 
 </div>
 
+<div class="card"
 <h2>All Customers</h2>
 <button class="secondary" onclick="loadCustomers()">🔄 Refresh</button>
 
+
+
 <div id="customers-container"></div>
-
-
+</div>
+<div class="card"
   <h2>User Requests</h2>
 <div id="requests-container">
-  
+  </div>
 </div>
-
-<h2>📅 Due Today / Overdue</h2>
+<div class="card">
+<h2>📅 Due Today / Overdue</h2></div>
 <div id="due-container"></div>
 
 
@@ -62,8 +70,10 @@
   <div class="card">Closed: <span id="closed-count">0</span></div>
 
 </div>
+<div class="card"
+  <h2>Leads List</h2>
   <div id="leads-container"></div>
-</div>
+</div></div>
 
 <div class="container"></div>
 
@@ -93,6 +103,11 @@ button {
   cursor: pointer;
   margin: 5px;
   transition: 0.2s;
+}
+
+h2 {
+  border-left: 5px solid #4CAF50;
+  padding-left: 10px;
 }
 
 button:hover {
@@ -194,7 +209,10 @@ window.loadCustomers = async function () {
   container.innerHTML = "Loading...";
 
   const querySnapshot = await getDocs(collection(db, "customers"));
-
+if (querySnapshot.empty) {
+  container.innerHTML = "<p>No data available</p>";
+  return;
+}
   container.innerHTML = "";
 
   if (querySnapshot.empty) {
@@ -386,7 +404,10 @@ async function loadRequests() {
 
   querySnapshot.forEach((docSnap) => {
     const data = docSnap.data();
-
+if (querySnapshot.empty) {
+  container.innerHTML = "<p>No data available</p>";
+  return;
+}
     container.innerHTML += `
       <div style="border:1px solid #000; padding:10px; margin:10px;">
         <p><strong>Email:</strong> ${data.email}</p>
