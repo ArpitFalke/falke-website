@@ -2,12 +2,54 @@
 <html>
 <head>
   <title>User Dashboard</title>
+  <style>
+body {
+  font-family: Arial, sans-serif;
+  background: #f5f7fb;
+  margin: 0;
+  padding: 20px;
+}
+
+h1, h2 {
+  color: #2c3e50;
+}
+
+button {
+  background: #4CAF50;
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  margin: 5px;
+}
+
+button:hover {
+  background: #45a049;
+}
+
+button.danger { background: red; }
+button.secondary { background: #555; }
+
+.card {
+  background: white;
+  border-radius: 12px;
+  padding: 15px;
+  margin: 10px 0;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.container {
+  max-width: 800px;
+  margin: auto;
+}
+</style>
 </head>
 <body>
-
+<div class="container">
 <h1>Welcome</h1>
 
-<button onclick="logout()">Logout</button>
+<button class="danger" onclick="logout()">Logout</button>
 
 <h2>Your Actions</h2>
 
@@ -15,9 +57,9 @@
 <button onclick="sendRequest('payment')">Request Payment Link</button>
 
 <h2>Your Requests</h2>
-<button onclick="loadRequests()">🔄 Refresh</button>
+<button class="secondary" onclick="loadRequests()">🔄 Refresh</button>
 <div id="requests-container"></div>
-
+</div>
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } 
@@ -82,7 +124,7 @@ async function loadRequests() {
     console.log(doc.data());
 
     container.innerHTML += `
-  <div style="border:1px solid #ccc; padding:10px; margin:10px;">
+  <div class="card">
     
     <p>Type: ${data.type}</p>
 

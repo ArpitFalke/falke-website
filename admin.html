@@ -22,7 +22,7 @@
 <button onclick="filterLeads('contacted')">Contacted</button>
 <button onclick="filterLeads('interested')">Interested</button>
 <button onclick="filterLeads('closed')">Closed</button>
-<button onclick="logout()">Logout</button>
+<button class="danger" onclick="logout()">Logout</button>
 
 <h2>Add Customer</h2>
 
@@ -32,14 +32,14 @@
 <input id="cust-premium" placeholder="Premium Amount"><br><br>
 <input id="cust-due" type="date"><br><br>
 
-<button onclick="addCustomer()">Add Customer</button>
+<button class="primary" onclick="addCustomer()">Add Customer</button>
 
 <hr>
 
 </div>
 
 <h2>All Customers</h2>
-<button onclick="loadCustomers()">🔄 Refresh</button>
+<button class="secondary" onclick="loadCustomers()">🔄 Refresh</button>
 
 <div id="customers-container"></div>
 
@@ -65,16 +65,75 @@
   <div id="leads-container"></div>
 </div>
 
-
+<div class="container"></div>
 
 <style>
-  .card {
-    border: 1px solid #ccc;
-    padding: 15px;
-    border-radius: 10px;
-    width: 150px;
-    text-align: center;
-  }
+body {
+  font-family: Arial, sans-serif;
+  background: #f5f7fb;
+  margin: 0;
+  padding: 20px;
+}
+
+h1 {
+  color: #2c3e50;
+}
+
+h2 {
+  margin-top: 30px;
+  color: #34495e;
+}
+
+button {
+  background: #4CAF50;
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  margin: 5px;
+  transition: 0.2s;
+}
+
+button:hover {
+  background: #45a049;
+}
+
+input {
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  width: 200px;
+}
+
+.card {
+  background: white;
+  border-radius: 12px;
+  padding: 15px;
+  margin: 10px 0;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.container {
+  max-width: 900px;
+  margin: auto;
+}
+
+.section {
+  margin-bottom: 30px;
+}
+
+.overdue {
+  border-left: 5px solid red;
+}
+
+.due-today {
+  border-left: 5px solid orange;
+}
+
+button.danger { background: red; }
+button.secondary { background: #555; }
+button.primary { background: #4CAF50; }
 </style>
 
 <script type="module">
@@ -147,7 +206,7 @@ window.loadCustomers = async function () {
     const data = docSnap.data();
 
     container.innerHTML += `
-      <div style="border:1px solid #ccc; padding:15px; margin:10px; border-radius:10px;">
+     <div class="card">
         <p><strong>Name:</strong> ${data.name}</p>
         <p><strong>Phone:</strong> ${data.phone}</p>
         <p><strong>Policy:</strong> ${data.policy}</p>
@@ -200,7 +259,7 @@ customers.sort((a, b) => (a.dueDate || "").localeCompare(b.dueDate || ""));
       const isOverdue = data.dueDate < today;
 
       container.innerHTML += `
-        <div style="border:2px solid ${isOverdue ? 'red' : 'orange'}; padding:15px; margin:10px; border-radius:10px;">
+       <div class="card ${isOverdue ? 'overdue' : 'due-today'}">
           <p><strong>Name:</strong> ${data.name}</p>
           <p><strong>Phone:</strong> ${data.phone}</p>
           <p><strong>Due Date:</strong> ${data.dueDate}</p>
