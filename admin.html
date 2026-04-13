@@ -43,15 +43,15 @@
 
 </div>
 
-<div class="card"
-<h2>All Customers</h2>
+<div class="card">
+<h2>All Customers</h2></div>
 <button class="secondary" onclick="loadCustomers()">🔄 Refresh</button>
 
 
 
 <div id="customers-container"></div>
 </div>
-<div class="card"
+<div class="card">
   <h2>User Requests</h2>
 <div id="requests-container">
   </div>
@@ -70,7 +70,7 @@
   <div class="card">Closed: <span id="closed-count">0</span></div>
 
 </div>
-<div class="card"
+<div class="card">
   <h2>Leads List</h2>
   <div id="leads-container"></div>
 </div></div>
@@ -401,13 +401,13 @@ async function loadRequests() {
 
   const container = document.getElementById("requests-container");
   container.innerHTML = "";
-
-  querySnapshot.forEach((docSnap) => {
-    const data = docSnap.data();
 if (querySnapshot.empty) {
   container.innerHTML = "<p>No data available</p>";
   return;
 }
+  querySnapshot.forEach((docSnap) => {
+    const data = docSnap.data();
+
     container.innerHTML += `
       <div style="border:1px solid #000; padding:10px; margin:10px;">
         <p><strong>Email:</strong> ${data.email}</p>
